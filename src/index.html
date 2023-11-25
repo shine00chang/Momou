@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mumu</title>
+    <link rel="stylesheet" href="app.css">
+  </head>
+  <body>
+    <div id="sigma-container"></div>
+    <div class="m-4 text-2xl font-bold tracking-wide"><span class="text-amber-400">Mumu</span>: <b class="text-amber-700">J</b>ust use <b class="text-amber-700">S</b>omething else</div>
+
+    <div id="search">
+      <input type="search" id="search-input" list="suggestions" placeholder="Search for a node"
+        class="mx-8 p-2 border-2 rounded-md"/>
+      <datalist id="suggestions"></datalist>
+    </div>
+
+    <div id="info-container" 
+      class="absolute top-0 right-0 w-96 h-[100vh] 
+        bg-gradient-to-l from-stone-300/80 from-70%">
+      <div id="name" class=""></div>
+      <hr>
+      <div id="refs" class=""></div>
+      <hr>
+      <div id="snippet" class="scroll-smooth"></div>
+    </div>
+
+    <script type="module" src="index.js"></script>
+  </body>
+</html>
+

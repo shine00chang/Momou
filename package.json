@@ -1,0 +1,19 @@
+{
+  "scripts": {
+    "start": "kotatsu start --typescript src/index.ts"
+  },
+  "dependencies": {
+    "graphology": "^0.25.4",
+    "graphology-generators": "^0.11.2",
+    "graphology-layout": "^0.6.1",
+    "graphology-layout-force": "^0.2.4",
+    "graphology-layout-forceatlas2": "^0.10.1",
+    "install": "^0.13.0",
+    "npm": "^10.2.3",
+    "sigma": "^3.0.0-alpha3"
+  },
+  "devDependencies": {
+    "parcel": "^2.10.2",
+    "tailwindcss": "^3.3.5"
+  }
+}
