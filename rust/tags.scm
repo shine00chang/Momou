@@ -1,13 +1,37 @@
+(function
+  name: (identifier) @name) @definition.function
+(function_declaration
+  name: (identifier) @name) @definition.function
+(method_definition
+  name: (property_identifier) @name) @definition.function
+
+(pair
+  key: (property_identifier) @name
+  value: [(function) (arrow_function)]) @definition.function
+
+(assignment_expression
+  left: (member_expression
+    property: (property_identifier) @name)
+  right: [(function) (arrow_function)]) @definition.function
+
+(variable_declarator
+  name: (identifier) @name 
+  value: [(function) (arrow_function)]) @definition.function
+
+(assignment_expression
+  left: (identifier) @name
+  right: [(function) (arrow_function)]) @definition.function
+
 ; method definition
-(
-  (comment)* @doc
-  .
-  (method_definition
-    name: (property_identifier) @name) @definition.method
-  (#not-eq? @name "constructor")
-  (#strip! @doc "^[\\s\\*/]+|^[\\s\\*/]$")
-  (#select-adjacent! @doc @definition.method)
-)
+;;
+;; (
+;;   (comment)* @doc
+;;   .
+
+;;   (#not-eq? @name "constructor")
+;;   (#strip! @doc "^[\\s\\*/]+|^[\\s\\*/]$")
+;;   (#select-adjacent! @doc @definition.method)
+;; )
 
 ; class definition
 (
@@ -24,62 +48,62 @@
 )
 
 ; function definition
-(
-  (comment)* @doc
-  .
-  [
-    (function
-      name: (identifier) @name)
-    (function_declaration
-      name: (identifier) @name)
-    (generator_function
-      name: (identifier) @name)
-    (generator_function_declaration
-      name: (identifier) @name)
-  ] @definition.function
-  (#strip! @doc "^[\\s\\*/]+|^[\\s\\*/]$")
-  (#select-adjacent! @doc @definition.function)
-)
+;; (
+;;   (comment)* @doc
+;;   .
+;;   [
+;;     (function
+;;       name: (identifier) @name)
+;;     (function_declaration
+;;       name: (identifier) @name)
+;;     (generator_function
+;;       name: (identifier) @name)
+;;     (generator_function_declaration
+;;       name: (identifier) @name)
+;;   ] @definition.function
+;;   (#strip! @doc "^[\\s\\*/]+|^[\\s\\*/]$")
+;;   (#select-adjacent! @doc @definition.function)
+;; )
 
-; something about arrow functions
-(
-  (comment)* @doc
-  .
-  (lexical_declaration
-    (variable_declarator
-      name: (identifier) @name
-      value: [(arrow_function) (function)]) @definition.function)
-  (#strip! @doc "^[\\s\\*/]+|^[\\s\\*/]$")
-  (#select-adjacent! @doc @definition.function)
-)
-
-; named arrow function declaration
-(
-  (comment)* @doc
-  .
-  (variable_declaration
-    (variable_declarator
-      name: (identifier) @name
-      value: [(arrow_function) (function)]) @definition.function)
-  (#strip! @doc "^[\\s\\*/]+|^[\\s\\*/]$")
-  (#select-adjacent! @doc @definition.function)
-)
-
-; named arrow function assignment 
-(assignment_expression
-  left: [
-    (identifier) @name
-    (member_expression
-      property: (property_identifier) @name)
-  ]
-  right: [(arrow_function) (function)]
-) @definition.function
-
-; arrow function declaration within object
-(pair
-  key: (property_identifier) @name
-  value: [(arrow_function) (function)]) @definition.function
-
+;; ; something about arrow functions
+;; (
+;;   (comment)* @doc
+;;   .
+;;   (lexical_declaration
+;;     (variable_declarator
+;;       name: (identifier) @name
+;;       value: [(arrow_function) (function)]) @definition.function)
+;;   (#strip! @doc "^[\\s\\*/]+|^[\\s\\*/]$")
+;;   (#select-adjacent! @doc @definition.function)
+;; )
+;;
+;; ; named arrow function declaration
+;; (
+;;   (comment)* @doc
+;;   .
+;;   (variable_declaration
+;;     (variable_declarator
+;;       name: (identifier) @name
+;;       value: [(arrow_function) (function)]) @definition.function)
+;;   (#strip! @doc "^[\\s\\*/]+|^[\\s\\*/]$")
+;;   (#select-adjacent! @doc @definition.function)
+;; )
+;;
+;; ; named arrow function assignment 
+;; (assignment_expression
+;;   left: [
+;;     (identifier) @name
+;;     (member_expression
+;;       property: (property_identifier) @name)
+;;   ]
+;;   right: [(arrow_function) (function)]
+;; ) @definition.function
+;;
+;; ; arrow function declaration within object
+;; (pair
+;;   key: (property_identifier) @name
+;;   value: [(arrow_function) (function)]) @definition.function
+;;
 ; call expression
 (
   (call_expression

@@ -1,0 +1,64 @@
+
+use super::*;
+
+impl Graph {
+    fn from (v: Vec<Func>) -> Self {
+        let m = v
+            .iter()
+            .enumerate()
+            .map(|(i, f)| (f.signature.clone(), i))
+            .collect();
+        Self {
+            v,
+            m,
+            e: HashSet::new()
+        }
+    }
+
+    fn get_origin (&self, offset: usize) -> Option<usize> {
+        self.v 
+            .iter()
+            .position(|func| func.range.contains(&offset))
+
+    }
+
+    fn get_target (&self, siganture: Signature) -> Option<usize> {
+        self.m.get(&siganture).map(|x| *x)
+    }
+
+    fn add_edge (&mut self, a: usize, b: usize) {
+        self.e.insert((a,b));
+    }
+}
+
+/// Populates Function.invocations by iterating over invocation tags.
+/// TODO: Uses annotations to identify invoked function's membership.
+pub fn make<'a> (file: &'a str, funcs: Vec<Func>, invocations: &Vec<Invocation>) -> Graph
+{
+    let mut graph = Graph::from(funcs);
+
+    for invoke in invocations {
+        // Find originating function
+        let origin = graph.get_origin(invoke.range.start)
+            .expect(&format!(
+                "could not find origin function for invocation: '{}'",
+                &file[invoke.range.clone()]));
+        
+        // TODO: Classes
+        let target = Signature { 
+            name: invoke.name.clone(),
+            class: None };
+        let target = graph.get_target(target);
+
+        // It cannot find target, just continue.
+        if target.is_none() {
+            continue;
+        }
+        let target = target.unwrap();
+        
+        
+        // Add invocation to function
+        graph.add_edge(origin, target);
+    }
+    graph
+}

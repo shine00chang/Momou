@@ -18,55 +18,57 @@ function lvalueTester () {
   a	 .  	b.  c(	c )	.	 d() = 2
 }
 
-function a () {
+function deterministic () {
   console.log("hello world");
   let a = 0;
   a += 1;
 }
 
 let state = 0;
-function b () {
+function mutating () {
   console.log("mutating!");
   state += 1;
 }
 
-function invokationTester () {
-	b()
-	a()
-	a()()
+function invoker () {
+	deterministic()
+	mutating()
 }
 
-class A {
+class Base {
   constructor () {}
-  a () {}
+  func () {}
 }
-class B extends A{
+class Child extends Base {
   constructor () {
     super()
+    this.state = 1;
   }
-  b () {}
+  mutate () {
+    this.state ++;
+  }
 }
 
 function annotationTester () {
 	//@class A
-	const hello = new A();
+	const hello = new Base();
 	
 	//@class B
-	let notHello = new B();
+	let notHello = new Child();
 	
-	hello.a()
-	notHello.b()
+	hello.func()
+	notHello.mutate()
 
-  basic()
+  emptyArrow()
 }
 
 const basic = () => {}
-const embedded = () => {
-  const f = () => {
+const timeouter_er = () => {
+  const embedded = () => {
 
   }
-  setTimeout(() => f(), 100);
-  setTimeout(function () { f() }, 100);
+  setTimeout(() => embedded(), 100);
+  setTimeout(function () { embedded() }, 100);
 }
 
 const obj = {
