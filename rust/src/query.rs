@@ -1,14 +1,96 @@
+use tree_sitter::{Parser, Language, QueryMatch, Query};
 use tree_sitter_tags::{TagsContext, TagsConfiguration, Tag};
 
 use super::*;
 
 pub fn query (file: &str) -> (Vec<Func>, Vec<Invocation>){
-    let tags = get_tags(&file);
-    let funcs = make_funcs(&file, &tags);
-    let invocations = make_invocations(&file, &tags);
+    let mut parser = Parser::new();
 
-    (funcs, invocations)
+    parser.set_language(tree_sitter_javascript::language())
+        .expect("Error loading Rust grammar");
+
+    let tree = parser.parse(file, None).unwrap();
+    let root_node = tree.root_node();
+
+    const TAG_QUERY_FILE: &str = "functions.scm";
+    let query_file = std::fs::read_to_string(&TAG_QUERY_FILE)
+        .expect(&format!("{BLD}failed to open query file '{}'{RST}", &TAG_QUERY_FILE));
+
+    let query = tree_sitter::Query::new(
+        tree_sitter_javascript::language(),
+        &query_file)
+        .unwrap();
+    let mut cursor = tree_sitter::QueryCursor::new();
+    let matches = cursor.matches(
+        &query,
+        root_node,
+        file.as_bytes());
+
+    let mut funcs = vec![];
+
+    
+    let get = get_maker(&query);
+
+
+    let classes = get_classes(&root_node, file);
+    println!("{:?}", classes);
+    for mat in matches {
+        // Switch for query type
+        if get(&mat, "function").is_some() {
+            println!(" - !! is function !!");
+            let range = get(&mat, "function").unwrap();
+            let name  = get(&mat, "name").unwrap();
+            let class = classes
+                .iter()
+                .find(|class| class.0.contains(&range.start))
+                .map(|class| class.1.to_owned());
+
+            let func = Func {
+                signature: Signature { 
+                    name: file[name].to_owned(), 
+                    class },
+                range,
+            };
+            funcs.push(func);
+        }
+    }
+
+    (funcs, vec![])
 }
+
+fn get_maker<'a> (query: &'a Query) -> impl for<'b> Fn(&'b QueryMatch, &'static str) -> Option<Range<usize>> + 'a {
+    |mat: &QueryMatch, capture_name| {
+        let i = query.capture_index_for_name(capture_name).unwrap();
+        mat.captures.iter().find(|cap| cap.index == i).map(|cap| cap.node.byte_range().clone())
+    }
+}
+
+fn get_classes<'a> (root_node: &tree_sitter::Node<'a>, file: &'a str) -> Vec<(Range<usize>, &'a str)> 
+{
+    const TAG_QUERY_FILE: &str = "classes.scm";
+    let query_file = std::fs::read_to_string(&TAG_QUERY_FILE)
+        .expect(&format!("{BLD}failed to open query file '{}'{RST}", &TAG_QUERY_FILE));
+
+    let query = tree_sitter::Query::new(
+        tree_sitter_javascript::language(),
+        &query_file)
+        .unwrap();
+    let mut cursor = tree_sitter::QueryCursor::new();
+    let matches = cursor.matches(
+        &query,
+        *root_node,
+        file.as_bytes());
+
+    let get = get_maker(&query);
+
+    matches
+        .filter_map(|mat| 
+            get(&mat, "class")
+                .map(|range| (range, &file[get(&mat, "name").unwrap()]))
+        )
+        .collect()
+}
+
 
 /// Uses Treesitter to extract tags
 fn get_tags (file: &str) -> Vec<(String, Tag)>

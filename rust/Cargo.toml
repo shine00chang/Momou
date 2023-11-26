@@ -4,8 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[build-dependencies]
+cc="*"
 
 [dependencies]
+tree-sitter = "0.20.10"
 tree-sitter-tags = "0.20.2"
 tree-sitter-javascript = "0.20.1"
 serde_json = "1.0"

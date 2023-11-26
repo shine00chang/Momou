@@ -79,6 +79,9 @@ fn main () {
     let (funcs, invocations) = query::query(&file);
 
     let graph = graph::make(&file, funcs, &invocations);
+    println!("{}", graph.v.len());
+
+    println!(" === {BLD} Serializing {RST} === ");
     serializer::serialize(output_path, graph);
 }
 

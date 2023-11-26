@@ -1,37 +1,35 @@
 (function
-  name: (identifier) @name) @definition.function
+  name: (identifier) @name
+  ) @function
+
 (function_declaration
-  name: (identifier) @name) @definition.function
+  name: (identifier) @name
+  ) @function
+
 (method_definition
-  name: (property_identifier) @name) @definition.function
+  name: (property_identifier) @name
+  ) @function
 
 (pair
   key: (property_identifier) @name
-  value: [(function) (arrow_function)]) @definition.function
+  value: [(function) (arrow_function)]) @function
 
 (assignment_expression
   left: (member_expression
-    property: (property_identifier) @name)
-  right: [(function) (arrow_function)]) @definition.function
+    property: (property_identifier)
+    ) @name
+  right: [(function) (arrow_function)]
+  ) @function
 
 (variable_declarator
   name: (identifier) @name 
-  value: [(function) (arrow_function)]) @definition.function
+  value: [(function) (arrow_function)]
+  ) @function
 
 (assignment_expression
   left: (identifier) @name
-  right: [(function) (arrow_function)]) @definition.function
-
-; method definition
-;;
-;; (
-;;   (comment)* @doc
-;;   .
-
-;;   (#not-eq? @name "constructor")
-;;   (#strip! @doc "^[\\s\\*/]+|^[\\s\\*/]$")
-;;   (#select-adjacent! @doc @definition.method)
-;; )
+  right: [(function) (arrow_function)]
+  ) @function
 
 ; class definition
 (
@@ -42,9 +40,9 @@
       name: (_) @name)
     (class_declaration
       name: (_) @name)
-  ] @definition.class
+  ] @class
   (#strip! @doc "^[\\s\\*/]+|^[\\s\\*/]$")
-  (#select-adjacent! @doc @definition.class)
+  (#select-adjacent! @doc @class)
 )
 
 ; function definition
