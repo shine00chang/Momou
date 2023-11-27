@@ -18,6 +18,7 @@ pub const HLT: &str = "\x1b[48;5;226m";
 pub struct Func {
     signature: Signature, 
     range: Range<usize>,
+    snippet: String,
 }
 
 #[derive(Debug, Clone, Default, Hash, PartialEq, Eq)]
@@ -28,6 +29,7 @@ pub struct Signature {
 
 pub struct Invocation {
     name: String,
+    origin: Option<String>,
     range: Range<usize>
 }
 

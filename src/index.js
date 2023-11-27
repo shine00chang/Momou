@@ -4,9 +4,16 @@ import circular from 'graphology-layout/circular';
 import data from "../rust/data.json";
 
 // Retrieve some useful DOM elements:
-const container = document.getElementById("sigma-container")
-const searchInput = document.getElementById("search-input")
-const searchSuggestions = document.getElementById("suggestions")
+const container = document.getElementById("sigma-container");
+const infoContainer = {
+  elem: document.getElementById("info-container"),
+  name: document.querySelector("#info-container #name"),
+  close: document.querySelector("#info-container #close"),
+  snippet: document.querySelector("#info-container #snippet"),
+  invocations: document.querySelector("#info-container #invocations"),
+};
+const searchInput = document.getElementById("search-input");
+const searchSuggestions = document.getElementById("suggestions");
 
 
 // Instantiate sigma:
@@ -29,8 +36,7 @@ searchSuggestions.innerHTML = graph
   .map((node) => `<option value="${graph.getNodeAttribute(node, "label")}"></option>`)
   .join("\n");
 
-// Actions:
-function setSearchQuery(query) {
+function setSearchQuery (query) {
   state.searchQuery = query;
 
   if (searchInput.value !== query) searchInput.value = query;
@@ -51,9 +57,7 @@ function setSearchQuery(query) {
 
       // Move the camera to center it on the selected node:
       const nodePosition = renderer.getNodeDisplayData(state.selectedNode);
-      renderer.getCamera().animate(nodePosition, {
-        duration: 500,
-      });
+      renderer.getCamera().animate(nodePosition, { duration: 500 });
     }
     // Else, we display the suggestions list:
     else {
@@ -69,8 +73,11 @@ function setSearchQuery(query) {
 
   // Refresh rendering:
   renderer.refresh();
+  // Refresh Info Display
+  setInfoDisplay();
 }
-function setHoveredNode(node) {
+
+function setHoveredNode (node) {
   if (node) {
     state.hoveredNode = node;
     state.hoveredNeighbors = new Set(graph.neighbors(node));
@@ -83,18 +90,35 @@ function setHoveredNode(node) {
   renderer.refresh();
 }
 
+// Sets the info display to 'state.selectedNode'
+// Deactivates display if 'state.selectedNode' is undefined
+function setInfoDisplay () {
+  if (state.selectedNode === undefined) {
+    infoContainer.elem.style.right = "-100vw";
+  } else {
+    infoContainer.elem.style.right = "0px";
+
+    const node = graph.getNodeAttributes(state.selectedNode);
+
+    infoContainer.name.innerText = node.label;
+    infoContainer.snippet.innerText = node.snippet;
+  }
+}
+
 // Bind search input interactions:
-searchInput.addEventListener("input", () => {
-  setSearchQuery(searchInput.value || "");
-});
-searchInput.addEventListener("blur", () => {
-  setSearchQuery("");
-});
+searchInput.addEventListener("input", () => setSearchQuery(searchInput.value || ""));
 
 // Bind graph interactions:
 renderer.on("enterNode", ({ node }) => setHoveredNode(node));
 renderer.on("leaveNode", _ => setHoveredNode(undefined));
+renderer.on("clickNode", ({ node }) => {
+  state.selectedNode = node;
+  setInfoDisplay();
+});
 
+// Bind Info Display interactions:
+infoContainer.close.addEventListener("click", () => setSearchQuery(""));
+ 
 // Render nodes accordingly to the internal state:
 // 1. If a node is selected, it is highlighted
 // 2. If there is query, all non-matching nodes are greyed
