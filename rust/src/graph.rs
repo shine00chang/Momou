@@ -22,7 +22,7 @@ impl Graph {
 
     }
 
-    fn get_target (&self, siganture: Signature) -> Option<usize> {
+    fn get_target (&self, siganture: &Signature) -> Option<usize> {
         self.m.get(&siganture).map(|x| *x)
     }
 
@@ -39,15 +39,17 @@ pub fn make<'a> (file: &'a str, funcs: Vec<Func>, invocations: &Vec<Invocation>)
 
     for invoke in invocations {
         // Find originating function
-        let origin = graph.get_origin(invoke.range.start)
-            .expect(&format!(
-                "could not find origin function for invocation: '{}'",
-                &file[invoke.range.clone()]));
+        let origin = graph.get_origin(invoke.range.start);
+
+        // If no origin, then is global invocation.
+        if origin.is_none() {
+            println!("-> {BLD}Note:{RST} Global invocation found at position: {}", invoke.range.start);
+            continue;
+        }
+        let origin = origin.unwrap();
         
         // TODO: Classes
-        let target = Signature { 
-            name: invoke.name.clone(),
-            class: None };
+        let target = &invoke.signature; 
         let target = graph.get_target(target);
 
         // It cannot find target, just continue.

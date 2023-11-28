@@ -28,7 +28,7 @@ pub struct Signature {
 }
 
 pub struct Invocation {
-    name: String,
+    signature: Signature,
     origin: Option<String>,
     range: Range<usize>
 }
