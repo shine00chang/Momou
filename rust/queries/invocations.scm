@@ -14,4 +14,4 @@
 
 ; class instantiation
 (new_expression
-  constructor: (_) @name) @invocation
+  constructor: (_) @name @constructor) @invocation

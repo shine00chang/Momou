@@ -2,7 +2,8 @@
 use super::*;
 
 impl Graph {
-    fn from (v: Vec<Func>) -> Self {
+    fn from (v: Functions) -> Self {
+        let v = v.v;
         let m = v
             .iter()
             .enumerate()
@@ -33,9 +34,21 @@ impl Graph {
 
 /// Populates Function.invocations by iterating over invocation tags.
 /// TODO: Uses annotations to identify invoked function's membership.
-pub fn make<'a> (file: &'a str, funcs: Vec<Func>, invocations: &Vec<Invocation>) -> Graph
+pub fn make<'a> (file: &'a str, funcs: Functions, invocations: &Vec<Invocation>) -> Graph
 {
     let mut graph = Graph::from(funcs);
+
+    for x in &graph.m {
+        println!("-{:?}", x);
+    }
+    for x in invocations {
+        print!("{:?}", x);
+        if graph.get_target(&x.signature).is_some() {
+            println!("   {BLD} Eureka! {RST}");
+        } else {
+            println!();
+        }
+    }
 
     for invoke in invocations {
         // Find originating function

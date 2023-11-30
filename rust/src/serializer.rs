@@ -17,10 +17,11 @@ struct Node {
 
 #[derive(Serialize)]
 struct Attributes {
-   label: String,
+    label: String,
     size: usize,
     x: usize,
     y: usize,
+    class: String,
 }
 
 #[derive(Serialize)]
@@ -44,7 +45,8 @@ pub fn serialize<'a> (path: &'a str, graph: Graph)
                     label,
                     size: 15,
                     x: 12,
-                    y: 214
+                    y: 214,
+                    class: func.signature.class.clone().unwrap_or_else(|| "global".to_owned())
                 }
             }
         })

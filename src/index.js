@@ -1,7 +1,10 @@
 import Sigma from "sigma";
 import Graph from "graphology";
-import circular from 'graphology-layout/circular';
+import circlepack from 'graphology-layout/circlepack';
 import data from "../rust/data.json";
+//import data from "./data.json";
+
+console.log(data);
 
 // Retrieve some useful DOM elements:
 const container = document.getElementById("sigma-container");
@@ -20,10 +23,18 @@ const searchSuggestions = document.getElementById("suggestions");
 const graph = new Graph();
 graph.import(data);
 
+circlepack.assign(graph, {
+  hierarchyAttributes: ["members"],
+});
+//circular.assign(graph);
 
-//const graph = complete(UndirectedGraph, 10);
-circular.assign(graph);
 
+document.getElementById("refresh").onclick = function () {
+  console.log("refresh");
+  circlepack.assign(graph, {
+    hierarchyAttributes: ["members"],
+  });
+}
 
 const renderer = new Sigma(graph, container);
 

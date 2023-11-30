@@ -27,9 +27,9 @@ pub struct Signature {
     class: Option<String>
 }
 
+#[derive(Debug, Clone, Default)]
 pub struct Invocation {
     signature: Signature,
-    origin: Option<String>,
     range: Range<usize>
 }
 
@@ -46,7 +46,9 @@ impl Signature {
     }
 }
 
-
+pub struct Functions {
+    v: Vec<Func>
+}
 pub struct Graph {
     v: Vec<Func>,
     m: HashMap<Signature, usize>,
