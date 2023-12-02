@@ -1,173 +1,194 @@
-import Sigma from "sigma";
-import Graph from "graphology";
-import circlepack from 'graphology-layout/circlepack';
+import * as d3 from "d3";
+import test from "./test.json";
 import data from "../rust/data.json";
-//import data from "./data.json";
 
 console.log(data);
+const graphContainer = document.getElementById("graph-container");
 
-// Retrieve some useful DOM elements:
-const container = document.getElementById("sigma-container");
-const infoContainer = {
-  elem: document.getElementById("info-container"),
-  name: document.querySelector("#info-container #name"),
-  close: document.querySelector("#info-container #close"),
-  snippet: document.querySelector("#info-container #snippet"),
-  invocations: document.querySelector("#info-container #invocations"),
-};
-const searchInput = document.getElementById("search-input");
-const searchSuggestions = document.getElementById("suggestions");
+// Specify the chart’s dimensions.
+const width = 928;
+const height = width;
+
+// Create the color scale.
+const color = d3.scaleLinear()
+  .domain([0, 5])
+  .range(["hsl(152,80%,80%)", "hsl(228,30%,40%)"])
+  .interpolate(d3.interpolateHcl);
+
+// Compute the layout.
+const pack = data => d3.pack()
+  .size([width, height])
+  .padding(3)
+  (d3.hierarchy(data.root)
+    .sum(d => d.value)
+    .sort((a, b) => b.value - a.value));
+const root = pack(data);
+
+// Create the SVG container.
+const svg = d3.create("svg")
+  .attr("viewBox", `-${width / 2} -${height / 2} ${width} ${height}`)
+  .attr("width", width)
+  .attr("height", height)
+  .attr("style", `max-width: 100%; height: auto; display: block; margin: 0 -14px; background: ${color(0)}; cursor: pointer;`);
 
 
-// Instantiate sigma:
-const graph = new Graph();
-graph.import(data);
+// Append the nodes.
+const node = svg.append("g")
+  .selectAll("circle")
+  .data(root.descendants().slice(1))
+  .join("circle")
+    .attr("fill", d => d.children ? color(d.depth) : "white")
+//    .attr("pointer-events", d => !d.children ? "none" : null)
+    .on("mouseover", function() { d3.select(this).attr("stroke", "#000"); })
+    .on("mouseout", function() { d3.select(this).attr("stroke", null); })
+//    .on("click", (event, d) => focus !== d && (zoom(event, d), event.stopPropagation()));
 
-circlepack.assign(graph, {
-  hierarchyAttributes: ["members"],
-});
-//circular.assign(graph);
-
-
-document.getElementById("refresh").onclick = function () {
-  console.log("refresh");
-  circlepack.assign(graph, {
-    hierarchyAttributes: ["members"],
-  });
-}
-
-const renderer = new Sigma(graph, container);
-
-// Type and declare internal state:
-const state = { searchQuery: "" };
-
-// Feed the datalist autocomplete values:
-searchSuggestions.innerHTML = graph
-  .nodes()
-  .map((node) => `<option value="${graph.getNodeAttribute(node, "label")}"></option>`)
-  .join("\n");
-
-function setSearchQuery (query) {
-  state.searchQuery = query;
-
-  if (searchInput.value !== query) searchInput.value = query;
-
-  if (query) {
-    const lcQuery = query.toLowerCase();
-    const suggestions = graph
-      .nodes()
-      .map((n) => ({ id: n, label: graph.getNodeAttribute(n, "label")}))
-      .filter(({ label }) => label.toLowerCase().includes(lcQuery));
-
-    // If we have a single perfect match, them we remove the suggestions, and
-    // we consider the user has selected a node through the datalist
-    // autocomplete:
-    if (suggestions.length === 1 && suggestions[0].label === query) {
-      state.selectedNode = suggestions[0].id;
-      state.suggestions = undefined;
-
-      // Move the camera to center it on the selected node:
-      const nodePosition = renderer.getNodeDisplayData(state.selectedNode);
-      renderer.getCamera().animate(nodePosition, { duration: 500 });
-    }
-    // Else, we display the suggestions list:
-    else {
-      state.selectedNode = undefined;
-      state.suggestions = new Set(suggestions.map(({ id }) => id));
-    }
+// Filter for leaves, then redirect to "show connections" function
+// -> "Show connections" will only trigger if we are already focused on a class
+// -> "Show connections" will automatically zoom out.
+// Finds the ancestory that is the decendent of the current focus.
+function ancestry (d) {
+  while (d.parent != focus) {
+    d = d.parent;
   }
-  // If the query is empty, then we reset the selectedNode / suggestions state:
-  else {
-    state.selectedNode = undefined;
-    state.suggestions = undefined;
-  }
-
-  // Refresh rendering:
-  renderer.refresh();
-  // Refresh Info Display
-  setInfoDisplay();
+  return d;
 }
+node
+  .filter(d => d.children === undefined || d.children.length == 0)
+  .on("click", (event, d) => d.parent === focus ? 
+    (showConnections(d), event.stopPropagation()) :
+    (zoom(event, ancestry(d)), event.stopPropagation()));
 
-function setHoveredNode (node) {
-  if (node) {
-    state.hoveredNode = node;
-    state.hoveredNeighbors = new Set(graph.neighbors(node));
-  } else {
-    state.hoveredNode = undefined;
-    state.hoveredNeighbors = undefined;
+// Filter for non-leaves, redirect to "zoom" function
+node
+  .filter(d => d.children !== undefined && d.children.length !== 0)
+  .on("click", (event, d) => focus !== d && (zoom(event, d), event.stopPropagation()));
+
+
+// Append the text labels.
+const label = svg.append("g")
+    .style("font", "10px sans-serif")
+    .attr("pointer-events", "none")
+    .attr("text-anchor", "middle")
+  .selectAll("text")
+  .data(root.descendants())
+  .join("text")
+    .style("fill-opacity", d => d.parent === root ? 1 : 0)
+    .style("display", d => d.parent === root ? "inline" : "none")
+    .text(d => d.data.name);
+
+
+// Lines
+// Map edges to include node
+const map = new Map(root.leaves().map(d => [d.data.name, d]));
+const edges = data.edges.map(edge => {
+  return {
+    src: map.get(edge.src),
+    dst: map.get(edge.dst)
   }
-
-  // Refresh rendering:
-  renderer.refresh();
-}
-
-// Sets the info display to 'state.selectedNode'
-// Deactivates display if 'state.selectedNode' is undefined
-function setInfoDisplay () {
-  if (state.selectedNode === undefined) {
-    infoContainer.elem.style.right = "-100vw";
-  } else {
-    infoContainer.elem.style.right = "0px";
-
-    const node = graph.getNodeAttributes(state.selectedNode);
-
-    infoContainer.name.innerText = node.label;
-    infoContainer.snippet.innerText = node.snippet;
-  }
-}
-
-// Bind search input interactions:
-searchInput.addEventListener("input", () => setSearchQuery(searchInput.value || ""));
-
-// Bind graph interactions:
-renderer.on("enterNode", ({ node }) => setHoveredNode(node));
-renderer.on("leaveNode", _ => setHoveredNode(undefined));
-renderer.on("clickNode", ({ node }) => {
-  state.selectedNode = node;
-  setInfoDisplay();
 });
 
-// Bind Info Display interactions:
-infoContainer.close.addEventListener("click", () => setSearchQuery(""));
- 
-// Render nodes accordingly to the internal state:
-// 1. If a node is selected, it is highlighted
-// 2. If there is query, all non-matching nodes are greyed
-// 3. If there is a hovered node, all non-neighbor nodes are greyed
-renderer.setSetting("nodeReducer", (node, data) => {
-  const res = { ...data };
+// Line generator
+const line = d3.line()
+  .x(d => d.x)
+  .y(d => d.y);
 
-  if (state.hoveredNeighbors && !state.hoveredNeighbors.has(node) && state.hoveredNode !== node) {
-    res.label = "";
-    res.color = "#f6f6f6";
-  }
+// Append lines.
+const lines = svg.append("g")
+    .attr("stroke", "#1f1f1f")
+    .attr("stroke-width", "3")
+    .attr("fill", "none")
+  .selectAll()
+  .data(edges)
+  .join("path")
+    .attr("d", ({ src, dst }) => {
+      const tan = (dst.y - src.y) / (dst.x - src.x);
+      const ang = Math.atan(tan) + (dst.x > src.x ? 0 : Math.PI);
+      const a = {
+        x: src.r * Math.cos(ang),
+        y: src.r * Math.sin(ang),
+      };
+      const b = {
+        x: dst.x - src.x - dst.r * Math.cos(ang),
+        y: dst.y - src.y - dst.r * Math.sin(ang),
+      };
+      return line([a, b])
+    })
+    .style("opacity", "0")
+    .style("transition", "opacity 500ms")
+    .each(function(d) { d.path = this; });
 
-  if (state.selectedNode === node) {
-    res.highlighted = true;
-  } else if (state.suggestions && !state.suggestions.has(node)) {
-    res.label = "";
-    res.color = "#f6f6f6";
-  }
+// Create the zoom behavior and zoom immediately in to the initial focus node.
+svg.on("click", (event) => zoom(event, root));
+let focus = root;
+let view;
+zoomTo([focus.x, focus.y, focus.r * 2]);
 
-  return res;
-});
+function zoomTo(v) {
+  const k = width / v[2];
 
-// Render edges accordingly to the internal state:
-// 1. If a node is hovered, the edge is hidden if it is not connected to the
-//    node
-// 2. If there is a query, the edge is only visible if it connects two
-//    suggestions
-renderer.setSetting("edgeReducer", (edge, data) => {
-  const res = { ...data };
+  view = v;
 
-  if (state.hoveredNode && !graph.hasExtremity(edge, state.hoveredNode)) {
-    res.hidden = true;
-  }
+  label.attr("transform", d => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`);
+  lines.attr("transform", ({ src }) => `
+    translate(${(src.x - v[0]) * k},${(src.y - v[1]) * k})
+    scale(${k})`
+  );
+  node.attr("transform", d => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`);
+  node.attr("r", d => d.r * k);
+}
 
-  if (state.suggestions && (!state.suggestions.has(graph.source(edge)) || !state.suggestions.has(graph.target(edge)))) {
-    res.hidden = true;
-  }
+function zoom(event, d) {
+  console.log("zoomies");
+  const focus0 = focus;
 
-  return res;
-});
+  console.log(focus);
+  focus = d;
 
+  const transition = svg.transition()
+      .duration(event.altKey ? 7500 : 750)
+      .tween("zoom", d => {
+        const i = d3.interpolateZoom(view, [focus.x, focus.y, focus.r * 2]);
+        return t => zoomTo(i(t));
+      });
+
+  // Refresh label visibility
+  label
+    .filter(function(d) { return d.parent === focus || this.style.display === "inline"; })
+    .transition(transition)
+    .style("fill-opacity", d => d.parent === focus ? 1 : 0)
+    .on("start", function(d) { if (d.parent === focus) this.style.display = "inline"; })
+    .on("end", function(d) { if (d.parent !== focus) this.style.display = "none"; });
+
+  // Refresh for line visibility
+  lines
+    .style("opacity", "0")
+
+  return transition;
+}
+
+// -> "Show connections" will automatically zoom out.
+function showConnections (fn) {
+  console.log("showing connections for: ", fn);
+  const transition = zoom({altKey: false}, root);
+
+  // Show connecting lines
+  const visibles = new Set();
+  visibles.add(fn.data.name);
+  lines
+    .filter(d => d.src.data.name == fn.data.name || d.dst.data.name == fn.data.name)
+    .style("opacity", "1")
+    .each(d => visibles.add(d.src.data.name) && visibles.add(d.dst.data.name));
+
+  // Show labels of connected components
+  const cond = (d) => visibles.has(d.data.name) > 0;
+  label
+    .transition(transition)
+    .style("fill-opacity", d => cond(d) ? 1 : 0)
+    .on("start", function(d) { cond(d) && (this.style.display = "inline") })
+    .on("end", function(d) { !cond(d) && (this.style.display = "none") });
+
+  return;
+}
+
+graphContainer.appendChild(svg.node());

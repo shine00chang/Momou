@@ -2,67 +2,68 @@ use serde::Serialize;
 
 use super::*;
 
-
 #[derive(Serialize)]
 struct Data {
-    nodes: Vec<Node>,
-    edges: Vec<Edge>
+    root: Node,
+    edges: Vec<Edge>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Default)]
 struct Node {
-    key: usize, 
-    attributes: Attributes,
-}
-
-#[derive(Serialize)]
-struct Attributes {
-    label: String,
-    size: usize,
-    x: usize,
-    y: usize,
-    class: String,
+    name: String, 
+    value: usize,
+    children: Vec<Node>,
 }
 
 #[derive(Serialize)]
 struct Edge {
-    key: usize, 
-    source: usize,
-    target: usize,
+    src: String,
+    dst: String,
 }
 
 /// Convert into sigma.js's graph format, and serialize.
 pub fn serialize<'a> (path: &'a str, graph: Graph) 
 {
-    let nodes = graph.v
+    let mut root = Node::default();
+    root.name = "global".to_owned();
+    graph.v
         .iter()
-        .enumerate()
-        .map(|(i, func)| {
-            let label = func.signature.to_string();
-            Node {
-                key: i,
-                attributes: Attributes { 
-                    label,
-                    size: 15,
-                    x: 12,
-                    y: 214,
-                    class: func.signature.class.clone().unwrap_or_else(|| "global".to_owned())
+        .for_each(|func| {
+            let name  = func.signature.to_string();
+            let class = func.signature.class.clone();
+            let node  = Node {
+                name,
+                value: 15,
+                children: vec![],
+            };
+
+            if let Some(class) = class {
+                if let Some(class) = root.children.iter_mut().find(|node| node.name == class) {
+                    class.children.push(node);
+                } else {
+                    let class = Node {
+                        name: class,
+                        value: 0,
+                        children: vec![node]
+                    };
+                    root.children.push(class);
                 }
+            } else {
+                root.children.push(node);
             }
-        })
-        .collect();
+        });
+
     let edges = graph.e
         .iter()
-        .enumerate()
-        .map(|(i, edge)| {
+        .map(|edge| {
             Edge {
-                key: i,
-                source: edge.0,
-                target: edge.1,
+                src: graph.v[edge.0].signature.to_string(),
+                dst: graph.v[edge.1].signature.to_string(),
             }
         })
         .collect();
-    let data = Data { nodes, edges };
+
+    let data = Data { root, edges };
     let serialized = serde_json::to_string(&data).unwrap();
 
     fs::write(path, serialized)

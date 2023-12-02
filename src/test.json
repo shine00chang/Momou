@@ -1,0 +1,28 @@
+{
+  "root": {
+    "name": "global",
+    "children": [
+      {"name": "func", "value": 15},
+      {
+        "name": "A",
+        "value": 15,
+        "children": [
+          {"name": "A::a", "value": 15},
+          {"name": "A::b", "value": 5}
+        ]
+      },
+      {
+        "name": "B",
+        "value": 15,
+        "children": [
+          {"name": "B::a", "value": 15},
+          {"name": "B::b", "value": 5}
+        ]
+      }
+    ]
+  },
+  "edges": [
+    {"src": "A::a", "dst": "B::b"},
+    {"src": "func", "dst": "B::b"}
+  ]
+}

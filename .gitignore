@@ -3,3 +3,4 @@ node_modules
 dist
 src/sample-data.json
 src/data.json
+sigma

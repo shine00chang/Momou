@@ -1,40 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mumu</title>
-    <link rel="stylesheet" href="app.css">
   </head>
   <body>
-    <div id="sigma-container"></div>
-
-    <!-- Title -->
-    <div class="relative m-4 text-2xl font-bold tracking-wide inline-flex">
-      Mumu
-    </div>
-
-    <!-- Search Bar -->
-    <div id="search">
-      <input type="search" id="search-input" list="suggestions" placeholder="Search for a node"
-        class="relative mx-8 p-2 border-2 rounded-md"/>
-      <datalist id="suggestions"></datalist>
-    </div>
-
-    <!-- Function Info -->
-    <div id="info-container" 
-      class="absolute top-0 right-[-50vw] w-96 h-[100vh] bg-stone-300/70"
-      style="transition: all 300ms ease-in-out">
-
-      <button id="close">close</button>
-      <div id="name" class=""></div>
-      <hr>
-      <div id="invocations" class=""></div>
-      <hr>
-      <div id="snippet" class="scroll-smooth"></div>
-    </div>
-    <button id="refresh" class="bg-stone-300 p-2 relative" >refresh</button>
+    <div id="graph-container"></div>
 
     <script type="module" src="index.js"></script>
   </body>
