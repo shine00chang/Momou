@@ -13,6 +13,7 @@ struct Node {
     name: String, 
     value: usize,
     children: Vec<Node>,
+    snippet: String,
 }
 
 #[derive(Serialize)]
@@ -33,7 +34,8 @@ pub fn serialize<'a> (path: &'a str, graph: Graph)
             let class = func.signature.class.clone();
             let node  = Node {
                 name,
-                value: 15,
+                value: func.value,
+                snippet: func.snippet.clone(),
                 children: vec![],
             };
 
@@ -44,6 +46,7 @@ pub fn serialize<'a> (path: &'a str, graph: Graph)
                     let class = Node {
                         name: class,
                         value: 0,
+                        snippet: String::new(),
                         children: vec![node]
                     };
                     root.children.push(class);

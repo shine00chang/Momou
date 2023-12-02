@@ -1,9 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+    <!-- and it's easy to individually load additional languages -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+    <style>
+      /* Hide scrollbar for Chrome, Safari and Opera */
+      #snippet::-webkit-scrollbar {
+        display: none;
+      }
+
+      /* Hide scrollbar for IE, Edge and Firefox */
+      #snippet {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+      }
+    </style>
   </head>
+
   <body>
-    <div id="graph-container"></div>
+    <!-- About button -->
+    <div id="about" class="absolute top-4 left-4"> 
+      <span class="text-2xl font-medium italic tracking-widest">Momou</span>
+      <span class="text-sm italic">about</span>
+    </div>
+    
+    <!-- About dialog -->
+    <dialog id="about-modal" class="p-8 ">
+      <div class="flex flex-col justify-center text-center">
+
+        <div class="italic">Javascript is hard to trace. I tried to help it out. I failed.</div>
+        <div>
+          It is a pain to write bigger code in plain JS, since the callbacks and function will become a mess, without much structure.
+          <br>
+          I thought a program that could identify individual functions and their invocations would help with program tracing.
+          <br>
+          I originally wanted more features like side-effect detection, but ran of motivation before then.
+          <br>
+          It kinda looks pretty tho.
+        </div>
+        <hr>
+        <div>
+          Technical Notes: <br>
+          The backend parser queries Treesitter, and the frontend is built with d3.js.
+        </div>
+        
+      </div>
+    </dialog>
+
+
+    <div class="flex flex-row w-[100vw] h-[100vh] overflow-hidden">
+      <div id="graph-container" class="w-[100vh]"></div>
+
+      <!-- Info Box -->
+      <div class="flex-grow flex flex-col w-fill p-2 gap-8">
+        <div id="name" class="text-2xl font-medium tracking-widest">[name]</div>
+        <hr>
+        <div 
+          id="snippet" 
+          class="text-sm bg-stone-100 rounded-lg p-4 pl-6 overflow-scroll"
+          style="white-space: pre">
+        </div>
+      </div>
+    </div>
 
     <script type="module" src="index.js"></script>
   </body>

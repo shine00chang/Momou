@@ -19,6 +19,7 @@ pub struct Func {
     signature: Signature, 
     range: Range<usize>,
     snippet: String,
+    value: usize,
 }
 
 #[derive(Debug, Clone, Default, Hash, PartialEq, Eq)]

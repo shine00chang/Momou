@@ -111,7 +111,7 @@ fn get_funcs<'a> (root_node: &tree_sitter::Node<'a>, file: &'a str, classes: &Ve
     let matches = cursor.matches(&query, *root_node, file.as_bytes());
     let get = get_maker(&query);
 
-    let v = matches
+    let v: Vec<_> = matches
         .map(|mat| {
             let range = get(&mat, "function").unwrap();
             let name  = get(&mat, "name").unwrap();
@@ -119,16 +119,22 @@ fn get_funcs<'a> (root_node: &tree_sitter::Node<'a>, file: &'a str, classes: &Ve
                 .iter()
                 .find(|class| class.0.contains(&range.start))
                 .map(|class| class.1.to_owned());
+            let snippet = Range { 
+                start: range.start,
+                end: range.end.min(range.start + 200)
+            };
 
             Func {
                 signature: Signature { 
                     name: file[name].to_owned(), 
                     class },
                 range: range.clone(),
-                snippet: file[range].to_owned()
+                value: (range.end - range.start).min(50),
+                snippet: file[snippet].to_owned()
             }
         })
         .collect();
+
     Functions::from(v)
 }
 

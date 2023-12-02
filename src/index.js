@@ -1,8 +1,13 @@
 import * as d3 from "d3";
-import test from "./test.json";
 import data from "../rust/data.json";
+import hljs from 'highlight.js/lib/core';
+import javascript from 'highlight.js/lib/languages/javascript';
+
 
 console.log(data);
+
+hljs.registerLanguage('javascript', javascript);
+
 const graphContainer = document.getElementById("graph-container");
 
 // Specify the chart’s dimensions.
@@ -38,10 +43,8 @@ const node = svg.append("g")
   .data(root.descendants().slice(1))
   .join("circle")
     .attr("fill", d => d.children ? color(d.depth) : "white")
-//    .attr("pointer-events", d => !d.children ? "none" : null)
     .on("mouseover", function() { d3.select(this).attr("stroke", "#000"); })
     .on("mouseout", function() { d3.select(this).attr("stroke", null); })
-//    .on("click", (event, d) => focus !== d && (zoom(event, d), event.stopPropagation()));
 
 // Filter for leaves, then redirect to "show connections" function
 // -> "Show connections" will only trigger if we are already focused on a class
@@ -56,13 +59,13 @@ function ancestry (d) {
 node
   .filter(d => d.children === undefined || d.children.length == 0)
   .on("click", (event, d) => d.parent === focus ? 
-    (showConnections(d), event.stopPropagation()) :
-    (zoom(event, ancestry(d)), event.stopPropagation()));
+    (showConnections(d), setInfo(d), event.stopPropagation()) :
+    (zoom(event, ancestry(d)), setInfo(ancestry(d)), event.stopPropagation()));
 
 // Filter for non-leaves, redirect to "zoom" function
 node
   .filter(d => d.children !== undefined && d.children.length !== 0)
-  .on("click", (event, d) => focus !== d && (zoom(event, d), event.stopPropagation()));
+  .on("click", (event, d) => focus !== d && (zoom(event, d), setInfo(d), event.stopPropagation()));
 
 
 // Append the text labels.
@@ -103,7 +106,7 @@ const lines = svg.append("g")
   .join("path")
     .attr("d", ({ src, dst }) => {
       const tan = (dst.y - src.y) / (dst.x - src.x);
-      const ang = Math.atan(tan) + (dst.x > src.x ? 0 : Math.PI);
+      const ang = Math.atan(tan) + (dst.x >= src.x ? 0 : Math.PI);
       const a = {
         x: src.r * Math.cos(ang),
         y: src.r * Math.sin(ang),
@@ -190,5 +193,19 @@ function showConnections (fn) {
 
   return;
 }
+
+// Info box setting
+const nameDiv = document.getElementById("name");
+const snippetDiv = document.getElementById("snippet");
+function setInfo (d) {
+  nameDiv.innerText = d.data.name;
+  snippetDiv.innerHTML = hljs.highlight(d.data.snippet, { language: 'js' }).value;
+}
+
+
+// About Modal
+const modal = document.getElementById("about-modal");
+const aboutBtn = document.getElementById("about");
+aboutBtn.onclick = () => modal.showModal();
 
 graphContainer.appendChild(svg.node());
